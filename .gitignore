@@ -27,3 +27,12 @@
 *.exe
 *.out
 *.app
+
+# Directories
+Debug/
+.vs/
+
+# IDE specific files
+*.opendb
+*.db
+*.sln
