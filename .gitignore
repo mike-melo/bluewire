@@ -36,3 +36,7 @@ Debug/
 *.opendb
 *.db
 *.sln
+
+# Temporary files
+*.TMP
+*.tmp
