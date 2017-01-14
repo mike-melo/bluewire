@@ -9,18 +9,22 @@
 
 using namespace std;
 
-void ObjFile::load(const string& file_name) {
+vector<vector<GLfloat>> obj_file::vertices() {
+	return this->mVertices;
+}
+
+void obj_file::load(const string& pFileName) {
 	string line;
-	ifstream file_stream(file_name);
-	while (getline(file_stream, line)) {
-		bool line_has_vertices = line.compare(0, string("v ").length(), string("v ")) == 0;
+	ifstream fileStream(pFileName);
+	while (getline(fileStream, line)) {
+		bool lineHasVertices = line.compare(0, string("v ").length(), string("v ")) == 0;
 		
-		if (line_has_vertices) {
-			istringstream string_stream(line);
+		if (lineHasVertices) {
+			istringstream stringStream(line);
 			GLfloat x, y, z;
-			string_stream >> string("v") >> x >> y >> z;
+			stringStream >> string("v") >> x >> y >> z;
 			vector<GLfloat> vertex{ x, y, z };
-			vertices.push_back(vertex);
+			mVertices.push_back(vertex);
 		}
 	}	
 }

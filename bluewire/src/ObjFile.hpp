@@ -7,10 +7,11 @@
 
 using namespace std;
 
-class ObjFile {
+class obj_file {
 public:
 	void load(const string& file_name);
-	
+	vector<vector<GLfloat>> vertices();
+
 private:
-	vector<vector<GLfloat>> vertices;
+	vector<vector<GLfloat>> mVertices;
 };

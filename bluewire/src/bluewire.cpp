@@ -59,10 +59,10 @@ int CALLBACK WinMain(
 	SetForegroundWindow(hWnd);						
 	SetFocus(hWnd);
 
-	ObjFile objFile;
-
+	obj_file objFile;
 	objFile.load("models\\triangle.obj");
-	
+	vector<vector<GLfloat>> vertices = objFile.vertices();
+
 	BOOL done = false;
 
 	while (!done) {
@@ -76,15 +76,24 @@ int CALLBACK WinMain(
 		} else {
 			glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			glBegin(GL_TRIANGLES);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glVertex2i(0, 1);
-			glColor3f(0.0f, 1.0f, 0.0f);
-			glVertex2i(-1, -1);
-			glColor3f(0.0f, 0.0f, 1.0f);
-			glVertex2i(1, -1);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			for (size_t i = 0; i<vertices.size(); ++i) {
+				if ((i % 3) == 0) {
+					glEnd();
+					glBegin(GL_TRIANGLES);
+				}
+
+				GLfloat x, y;
+				vector<GLfloat> vertex = vertices.at(i);
+
+				x = vertex.at(0);				
+				y = vertex.at(1);
+				
+				glVertex2f(x, y);
+			}		
+
 			glEnd();
-			glFlush();
+
 			SwapBuffers(deviceContext);
 		}
 	}
