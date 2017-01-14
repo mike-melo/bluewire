@@ -150,7 +150,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bluewire.cpp" />
+    <ClCompile Include="src\bluewire.cpp" />
+    <ClCompile Include="src\ObjFile.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ObjFile.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

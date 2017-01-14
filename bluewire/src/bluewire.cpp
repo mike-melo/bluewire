@@ -3,6 +3,8 @@
 #include <GL/glew.h>
 #include <GL/wglew.h>
 
+#include "ObjFile.hpp"
+
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
@@ -57,6 +59,10 @@ int CALLBACK WinMain(
 	SetForegroundWindow(hWnd);						
 	SetFocus(hWnd);
 
+	ObjFile objFile;
+
+	objFile.load("models\\triangle.obj");
+	
 	BOOL done = false;
 
 	while (!done) {
