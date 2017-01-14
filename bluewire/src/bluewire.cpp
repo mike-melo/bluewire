@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <GL/wglew.h>
 
-#include "ObjFile.hpp"
+#include "obj_file.hpp"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")

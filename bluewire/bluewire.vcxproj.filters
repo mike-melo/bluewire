@@ -18,12 +18,12 @@
     <ClCompile Include="src\bluewire.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ObjFile.cpp">
+    <ClCompile Include="src\obj_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\ObjFile.hpp">
+    <ClInclude Include="src\obj_file.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

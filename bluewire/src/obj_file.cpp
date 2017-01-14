@@ -1,4 +1,4 @@
-#include "ObjFile.hpp"
+#include "obj_file.hpp"
 
 #include <GL/glew.h>
 
