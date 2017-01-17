@@ -3,14 +3,39 @@
 #include <GL/glew.h>
 #include <GL/wglew.h>
 
+#include <iostream>
+
 #include "obj_file.hpp"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
+#define BUFFER_OFFSET(i) ((void*)(i))
+
+#define GLSL(version, shader)  "#version " #version "\n" #shader
+
+const GLchar* vertexShader = GLSL(430,
+	layout(location = 0) in vec4 vPosition;
+	
+	void main() {
+		gl_Position = vPosition;
+	}
+);
+
+const GLchar* fragmentShader = GLSL(430,
+	out vec4 fColor;
+
+	void main() {
+		fColor = vec4(0.0, 0.0, 1.0, 1.0);
+	}
+);
+
 HWND hWnd = NULL;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+void init(vector<vector<GLfloat>> vertices);
+void render(vector<vector<GLfloat>> vertices);
 
 HGLRC renderingContext;
 
@@ -58,10 +83,18 @@ int CALLBACK WinMain(
 	ShowWindow(hWnd, SW_SHOW);						
 	SetForegroundWindow(hWnd);						
 	SetFocus(hWnd);
+	
+	/* We should properly quit in the proper Win32 way */
+	if (glewInit()) {
+		cerr << "GLEW could not be initialized" << endl;
+		exit(-1);
+	}
 
 	obj_file objFile;
 	objFile.load("models\\triangle.obj");
 	vector<vector<GLfloat>> vertices = objFile.vertices();
+
+	init(vertices);
 
 	BOOL done = false;
 
@@ -74,31 +107,57 @@ int CALLBACK WinMain(
 				DispatchMessage(&msg);
 			}
 		} else {
-			glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			for (size_t i = 0; i<vertices.size(); ++i) {
-				if ((i % 3) == 0) {
-					glEnd();
-					glBegin(GL_TRIANGLES);
-				}
-
-				GLfloat x, y;
-				vector<GLfloat> vertex = vertices.at(i);
-
-				x = vertex.at(0);				
-				y = vertex.at(1);
-				
-				glVertex2f(x, y);
-			}		
-
-			glEnd();
-
+			render(vertices);
 			SwapBuffers(deviceContext);
 		}
 	}
 
 	return 0;
+}
+
+void init(vector<vector<GLfloat>> vertices) {
+	GLuint buffer;
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 2, NULL, GL_STATIC_DRAW);
+
+	GLintptr offset = 0;
+
+	for (size_t i = 0; i<vertices.size(); i++, offset += sizeof(GLfloat) * 2) {
+		vector<GLfloat> vertex = vertices.at(i);
+		GLfloat rawVertices[] = { vertex.at(0), vertex.at(1) };
+		glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(GLfloat) * 2, rawVertices);
+	}
+
+	GLuint vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderHandle, 1, (const GLchar **)&vertexShader, NULL);
+	glCompileShader(vertexShaderHandle);
+
+	GLuint fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderHandle, 1, (const GLchar **)&fragmentShader, NULL);
+	glCompileShader(fragmentShaderHandle);
+
+	GLuint program = glCreateProgram();
+	glAttachShader(program, vertexShaderHandle);
+	glAttachShader(program, fragmentShaderHandle);
+	glLinkProgram(program);
+
+	glUseProgram(program);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glEnableVertexAttribArray(0);
+}
+
+void render(vector<vector<GLfloat>> vertices) {
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
