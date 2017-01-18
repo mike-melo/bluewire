@@ -3,6 +3,11 @@
 #include <GL/glew.h>
 #include <GL/wglew.h>
 
+#include <gmtl/gmtl.h>
+#include <gmtl/Matrix.h>
+
+#include <vmath/vmath.h>
+
 #include <iostream>
 
 #include "obj_file.hpp"
@@ -16,9 +21,10 @@
 
 const GLchar* vertexShader = GLSL(430,
 	layout(location = 0) in vec4 vPosition;
+	layout(location = 1) uniform mat4 modelViewProject;
 	
 	void main() {
-		gl_Position = vPosition;
+		gl_Position = modelViewProject * vPosition;
 	}
 );
 
@@ -38,6 +44,8 @@ void init(vector<vector<GLfloat>> vertices);
 void render(vector<vector<GLfloat>> vertices);
 
 HGLRC renderingContext;
+
+using namespace vmath;
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -124,14 +132,14 @@ void init(vector<vector<GLfloat>> vertices) {
 
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 2, NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 3, NULL, GL_STATIC_DRAW);
 
 	GLintptr offset = 0;
 
-	for (size_t i = 0; i<vertices.size(); i++, offset += sizeof(GLfloat) * 2) {
+	for (size_t i = 0; i<vertices.size(); i++, offset += sizeof(GLfloat) * 3) {
 		vector<GLfloat> vertex = vertices.at(i);
-		GLfloat rawVertices[] = { vertex.at(0), vertex.at(1) };
-		glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(GLfloat) * 2, rawVertices);
+		GLfloat rawVertices[] = { vertex.at(0), vertex.at(1), vertex.at(2) };
+		glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(GLfloat) * 3, rawVertices);
 	}
 
 	GLuint vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER);
@@ -149,8 +157,11 @@ void init(vector<vector<GLfloat>> vertices) {
 
 	glUseProgram(program);
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(0);
+
+	mat4 projection = frustum( -3, 3, -3, 3, 5, 10 );
+	glUniformMatrix4fv(1, 1, GL_TRUE, projection);
 }
 
 void render(vector<vector<GLfloat>> vertices) {
