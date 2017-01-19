@@ -10,8 +10,10 @@ using namespace std;
 class obj_file {
 public:
 	void load(const string& file_name);
-	vector<vector<GLfloat>> vertices();
+	vector<GLfloat> vertices();
+	vector<GLint> faces();
 
 private:
-	vector<vector<GLfloat>> mVertices;
+	vector<GLfloat> mVertices;
+	vector<GLint> mFaces;
 };

@@ -21,10 +21,11 @@
 
 const GLchar* vertexShader = GLSL(430,
 	layout(location = 0) in vec4 vPosition;
-	layout(location = 1) uniform mat4 modelViewProject;
+	layout(location = 1) uniform mat4 modelView;
+	layout(location = 2) uniform mat4 projection;
 	
 	void main() {
-		gl_Position = modelViewProject * vPosition;
+		gl_Position = projection * modelView * vPosition;
 	}
 );
 
@@ -40,8 +41,9 @@ HWND hWnd = NULL;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-void init(vector<vector<GLfloat>> vertices);
-void render(vector<vector<GLfloat>> vertices);
+void init(vector<GLfloat> vertices);
+void render(vector<GLint> faces);
+void compileShader(GLuint shaderHandle);
 
 HGLRC renderingContext;
 
@@ -99,8 +101,9 @@ int CALLBACK WinMain(
 	}
 
 	obj_file objFile;
-	objFile.load("models\\triangle.obj");
-	vector<vector<GLfloat>> vertices = objFile.vertices();
+	objFile.load("models\\teapot.obj");
+	vector<GLfloat> vertices = objFile.vertices();
+	vector<GLint> faces = objFile.faces();
 
 	init(vertices);
 
@@ -115,7 +118,7 @@ int CALLBACK WinMain(
 				DispatchMessage(&msg);
 			}
 		} else {
-			render(vertices);
+			render(faces);
 			SwapBuffers(deviceContext);
 		}
 	}
@@ -123,32 +126,23 @@ int CALLBACK WinMain(
 	return 0;
 }
 
-void init(vector<vector<GLfloat>> vertices) {
+void init(vector<GLfloat> vertices) {
 	GLuint buffer;
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+	
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 3, NULL, GL_STATIC_DRAW);
-
-	GLintptr offset = 0;
-
-	for (size_t i = 0; i<vertices.size(); i++, offset += sizeof(GLfloat) * 3) {
-		vector<GLfloat> vertex = vertices.at(i);
-		GLfloat rawVertices[] = { vertex.at(0), vertex.at(1), vertex.at(2) };
-		glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(GLfloat) * 3, rawVertices);
-	}
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
 	GLuint vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShaderHandle, 1, (const GLchar **)&vertexShader, NULL);
-	glCompileShader(vertexShaderHandle);
+	compileShader(vertexShaderHandle);
 
 	GLuint fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShaderHandle, 1, (const GLchar **)&fragmentShader, NULL);
-	glCompileShader(fragmentShaderHandle);
+	compileShader(fragmentShaderHandle);
 
 	GLuint program = glCreateProgram();
 	glAttachShader(program, vertexShaderHandle);
@@ -160,15 +154,49 @@ void init(vector<vector<GLfloat>> vertices) {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(0);
 
-	mat4 projection = frustum( -3, 3, -3, 3, 5, 10 );
-	glUniformMatrix4fv(1, 1, GL_TRUE, projection);
+	GLuint width = 800, height = 600;
+	glViewport(0, 0, width, height);
+	GLfloat  aspect = GLfloat(width) / height;
+
+	mat4 modelview = translate(0.0f, 0.0f, 5.0f);
+	//modelview *= translate(0.0f, 0.0f, 1.5f);
+		
+	vec3 cameraPos = {0.0f, 0.0f, 100.0f};
+	vec3 lookTowards = { 0.0f, 0.0f, 1.0f};
+	vec3 upVector = { 0.0f, 1.0f, 0.0f };
+	mat4 projection = lookat(cameraPos, lookTowards, upVector);
+//	mat4 projection = perspective(90.0, aspect, 5, 10);
+
+	glUniformMatrix4fv(1, 1, GL_TRUE, modelview);
+	glUniformMatrix4fv(2, 1, GL_TRUE, projection);
 }
 
-void render(vector<vector<GLfloat>> vertices) {
+void compileShader(GLuint shaderHandle) {
+	glCompileShader(shaderHandle);
+
+	GLint isCompiled = 0;
+	glGetShaderiv(shaderHandle, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE)
+	{
+		GLint maxLength = 0;
+		glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &maxLength);
+
+		std::vector<GLchar> errorLog(maxLength);
+		glGetShaderInfoLog(shaderHandle, maxLength, &maxLength, &errorLog[0]);
+
+		// Provide the infolog in whatever manor you deem best.
+		// Exit with failure.
+		glDeleteShader(shaderHandle); // Don't leak the shader.
+		return;
+	}
+}
+
+void render(vector<GLint> faces) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+	glDrawElements(GL_TRIANGLES, faces.size(),
+		GL_UNSIGNED_INT, faces.data());
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
