@@ -13,7 +13,7 @@ vector<GLfloat> obj_file::vertices() {
 	return this->mVertices;
 }
 
-vector<GLint> obj_file::faces() {
+vector<GLushort> obj_file::faces() {
 	return this->mFaces;
 }
 
@@ -35,7 +35,7 @@ void obj_file::load(const string& pFileName) {
 
 		if (lineHasFaces) {
 			istringstream stringStream(line);
-			GLint v1, v2, v3;
+			GLushort v1, v2, v3;
 			stringStream >> string("f") >> v1 >> v2 >> v3;
 			mFaces.push_back(v1 - 1);
 			mFaces.push_back(v2 - 1);

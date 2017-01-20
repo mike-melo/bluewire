@@ -11,9 +11,9 @@ class obj_file {
 public:
 	void load(const string& file_name);
 	vector<GLfloat> vertices();
-	vector<GLint> faces();
+	vector<GLushort> faces();
 
 private:
 	vector<GLfloat> mVertices;
-	vector<GLint> mFaces;
+	vector<GLushort> mFaces;
 };
