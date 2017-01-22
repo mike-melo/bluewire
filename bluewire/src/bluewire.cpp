@@ -44,10 +44,13 @@ void init(vector<GLfloat> vertices, vector<GLushort> faces);
 void render(vector<GLushort> faces);
 void compileShader(GLuint shaderHandle);
 
+using namespace vmath;
+
 HGLRC renderingContext;
 GLuint indices;
-
-using namespace vmath;
+GLuint program;
+mat4 mvp;
+GLuint buffer;
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -101,7 +104,7 @@ int CALLBACK WinMain(
 	}
 
 	obj_file objFile;
-	objFile.load("models\\triangle.obj");
+	objFile.load("models\\teapot.obj");
 	vector<GLfloat> vertices = objFile.vertices();
 	vector<GLushort> faces = objFile.faces();
 
@@ -127,11 +130,6 @@ int CALLBACK WinMain(
 }
 
 void init(vector<GLfloat> vertices, vector<GLushort> faces) {
-	GLuint buffer;
-
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
@@ -148,25 +146,15 @@ void init(vector<GLfloat> vertices, vector<GLushort> faces) {
 	glShaderSource(fragmentShaderHandle, 1, (const GLchar **)&fragmentShader, NULL);
 	compileShader(fragmentShaderHandle);
 
-	GLuint program = glCreateProgram();
+	program = glCreateProgram();
 	glAttachShader(program, vertexShaderHandle);
 	glAttachShader(program, fragmentShaderHandle);
 	glLinkProgram(program);
 
-	glUseProgram(program);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(0);
-
-	GLuint width = 800, height = 600;
-	
-	mat4 model = mat4(1.0f);
-		
-	mat4 view = lookat(vec3(3, 0, -3), vec3(0, 0, 0), vec3(0, 1, 0));
-	mat4 projection = perspective(60.0f, (float)width / (float)height, 1, 100);
-	mat4 mvp = projection * view * model;
-
-	glUniformMatrix4fv(1, 1, GL_FALSE, mvp);
+	mat4 model = mat4::identity();		
+	mat4 view = lookat(vec3(4.0f, 3.0f, 3.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat4 projection = perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	mvp = projection * view * model;
 }
 
 void compileShader(GLuint shaderHandle) {
@@ -190,12 +178,19 @@ void compileShader(GLuint shaderHandle) {
 }
 
 void render(vector<GLushort> faces) {
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glUseProgram(program);
+
+	glUniformMatrix4fv(1, 1, GL_FALSE, &mvp[0][0]);
+
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
-	glDrawElements(GL_TRIANGLES, faces.size(),
-		GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, faces.size(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+
+	glDisableVertexAttribArray(0);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
