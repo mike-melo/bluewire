@@ -151,9 +151,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\bluewire.cpp" />
+    <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\obj_file.cpp" />
+    <ClCompile Include="src\scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\gl.hpp" />
+    <ClInclude Include="src\scene.hpp" />
+    <ClInclude Include="src\model.hpp" />
     <ClInclude Include="src\obj_file.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
