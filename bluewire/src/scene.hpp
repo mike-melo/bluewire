@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 #include <vmath/vmath.h>
 
-#include "gl.hpp"
 #include "model.hpp"
 
 #include <string>
@@ -13,16 +12,20 @@ using namespace vmath;
 
 class scene {
 public:
-	scene(const gl& gl);
-
 	void lookat(vec3 eye, vec3 center, vec3 up);
-	void add_model(const model& model, mat4 world_pos);
+	void add_model(const model& model);
+	void prepare();
 	void render();
 
 private:
-	gl mGl;
 
-	vec3 eye;
-	vec3 center;
-	vec3 up;
+	vector<model> mModels;
+
+	vec3 mEye;
+	vec3 mCenter;
+	vec3 mUp;
+
+	GLuint mIndicesBuffer;
+	GLuint mVerticesBuffer;
+	GLuint mShaderProgram;
 };
